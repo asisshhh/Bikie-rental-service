@@ -69,9 +69,17 @@ const Footer = () => {
   href="https://instagram.com/bikie_2022"
   target="_blank"
   rel="noopener noreferrer"
-  className="block bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-semibold text-center py-3 rounded-lg shadow-lg hover:from-pink-600 hover:to-yellow-600 transition-all duration-300"
+  className="flex items-center justify-center space-x-2 bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:from-pink-600 hover:to-yellow-600 transition-all duration-300"
 >
-  Follow us on Instagram
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="currentColor"
+    viewBox="0 0 448 512"
+    className="w-5 h-5"
+  >
+    <path d="M224,202.66A53.34,53.34,0,1,0,277.34,256,53.38,53.38,0,0,0,224,202.66Zm124.71-41a54,54,0,0,0-30.19-30.19C298,123,256,123,256,123s-42,0-62.51,1.49a54,54,0,0,0-30.19,30.19C160,165,160,208,160,208s0,42,1.49,62.51a54,54,0,0,0,30.19,30.19C214,302,256,302,256,302s42,0,62.51-1.49a54,54,0,0,0,30.19-30.19C288,250,288,208,288,208S288,165,348.71,161.71ZM398.8,95.2A48,48,0,0,0,352,48H96A48,48,0,0,0,49.2,95.2C48,114,48,148.8,48,192v128c0,43.2,0,78,1.2,96.8A48,48,0,0,0,96,464H352a48,48,0,0,0,46.8-47.2c1.2-18.8,1.2-53.6,1.2-96.8V192C400,148.8,400,114,398.8,95.2Z"/>
+  </svg>
+  <span>Follow us</span>
 </a>
 
 
