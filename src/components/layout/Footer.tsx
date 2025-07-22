@@ -45,11 +45,12 @@ const Footer = () => {
 </p>
   </address>
 </div>
-  <div className="mt-4">
+  <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+  <h3 className="text-lg font-semibold mb-4 text-white">Our Location</h3>
   <iframe
       src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d726.4619738932952!2d85.90046717893293!3d20.469467274863273!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a190d633e868ec7%3A0xf365f29219e6d674!2sBikie!5e0!3m2!1sen!2sin!4v1753186447275!5m2!1sen!2sin"
       width="100%"
-      height="320"
+      height="250"
       style={{ border: 0 }}
       allowFullScreen=""
       loading="lazy"
