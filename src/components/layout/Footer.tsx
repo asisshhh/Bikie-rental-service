@@ -37,9 +37,23 @@ const Footer = () => {
   <address className="text-gray-300 not-italic">
     <p>Pareswara sahi, Near baya baba matha</p>
     <p>Jobra, Cuttack, Odisha, pin-753003</p>
-    <p className="mt-2">Phone: 8144229188</p>
-    <p>Email: bikieindia@gmail.com</p>
+<p className="mt-2">
+  Phone: <a href="tel:8144229188" className="hover:underline">8144229188</a>
+</p>
+<p>
+  Email: <a href="mailto:bikieindia@gmail.com" className="hover:underline">bikieindia@gmail.com</a>
+</p>
   </address>
+  <div className="mt-4">
+  <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d726.4619738932952!2d85.90046717893293!3d20.469467274863273!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a190d633e868ec7%3A0xf365f29219e6d674!2sBikie!5e0!3m2!1sen!2sin!4v1753186447275!5m2!1sen!2sin"
+      width="100%"
+      height="250"
+      style={{ border: 0 }}
+      allowFullScreen=""
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"></iframe>
+  </div>
 </div>
 </div>
         
