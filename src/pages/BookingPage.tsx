@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -21,7 +20,7 @@ interface BookingFormData {
   vehicleId: string;
   pickupDate: Date | null;
   pickupTime: string;
-  duration: number;
+  selectedSlot: string; // Format: "hours:price" for bikes, or just hours for cars
 }
 
 const BookingPage = () => {
@@ -37,7 +36,7 @@ const BookingPage = () => {
     vehicleId: vehicleId || "",
     pickupDate: null,
     pickupTime: "",
-    duration: 1
+    selectedSlot: ""
   });
   
   const [loading, setLoading] = useState(false);
@@ -67,7 +66,13 @@ const BookingPage = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      // Reset selectedSlot when vehicle changes
+      if (name === "vehicleId") {
+        return { ...prev, [name]: value, selectedSlot: "" };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleDateChange = (date: Date | null) => {
@@ -75,17 +80,35 @@ const BookingPage = () => {
   };
 
   const calculateTotalCost = (): number => {
-    if (!selectedVehicle) return 0;
-    return selectedVehicle.hourlyRate * formData.duration;
+    if (!selectedVehicle || !formData.selectedSlot) return 0;
+    
+    // For bikes with slot-based pricing
+    if (selectedVehicle.slots && selectedVehicle.slots.length > 0) {
+      const [hours, price] = formData.selectedSlot.split(":");
+      return parseFloat(price) || 0;
+    }
+    
+    // For cars or vehicles without slots, use hourly rate
+    const duration = parseInt(formData.selectedSlot) || 1;
+    return selectedVehicle.hourlyRate * duration;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const getSelectedSlotHours = (): number => {
+    if (!formData.selectedSlot) return 0;
+    if (selectedVehicle?.slots && selectedVehicle.slots.length > 0) {
+      const [hours] = formData.selectedSlot.split(":");
+      return parseInt(hours) || 0;
+    }
+    return parseInt(formData.selectedSlot) || 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Form validation
     if (!formData.firstName || !formData.lastName || !formData.email || 
         !formData.phone || !formData.vehicleId || !formData.pickupDate || 
-        !formData.pickupTime || formData.duration < 1) {
+        !formData.pickupTime || !formData.selectedSlot) {
       toast({
         title: "Error",
         description: "Please fill in all required fields.",
@@ -96,15 +119,70 @@ const BookingPage = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-      toast({
-        title: "Booking Successful!",
-        description: "Your booking has been confirmed. You will receive a confirmation email shortly.",
+    try {
+      // Prepare FormData for Web3Forms
+      const submissionData = new FormData();
+      
+      // Add access key
+      submissionData.append("access_key", "b9669a0d-6685-474d-8776-549be978b21e");
+      
+      // Add form fields
+      submissionData.append("name", `${formData.firstName} ${formData.lastName}`);
+      submissionData.append("email", formData.email);
+      submissionData.append("phone", formData.phone);
+      submissionData.append("subject", "New Booking Request - Bikie Rental Service");
+      
+      // Format booking details as message
+      const slotHours = getSelectedSlotHours();
+      const isSlotBased = selectedVehicle?.slots && selectedVehicle.slots.length > 0;
+      const pricingInfo = isSlotBased 
+        ? `Slot: ${slotHours} hours`
+        : `Duration: ${slotHours} ${slotHours > 1 ? 'hours' : 'hour'} | Hourly Rate: ₹${selectedVehicle?.hourlyRate.toFixed(2) || '0.00'}`;
+      
+      const bookingDetails = `
+New Booking Request:
+
+Personal Information:
+- Name: ${formData.firstName} ${formData.lastName}
+- Email: ${formData.email}
+- Phone: ${formData.phone}
+
+Booking Details:
+- Vehicle: ${selectedVehicle?.name || 'N/A'} (${selectedVehicle?.type === 'car' ? 'Car' : 'Bike'})
+- Pickup Date: ${formData.pickupDate ? format(formData.pickupDate, 'PPP') : 'N/A'}
+- Pickup Time: ${formData.pickupTime}
+- ${pricingInfo}
+- Total Cost: ₹${calculateTotalCost().toFixed(2)}
+      `.trim();
+      
+      submissionData.append("message", bookingDetails);
+      
+      // Submit to Web3Forms
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: submissionData
       });
-    }, 1500);
+
+      const data = await response.json();
+
+      if (data.success) {
+        setLoading(false);
+        setSubmitted(true);
+        toast({
+          title: "Booking Successful!",
+          description: "Your booking has been confirmed. You will receive a confirmation email shortly.",
+        });
+      } else {
+        throw new Error(data.message || "Submission failed");
+      }
+    } catch (error) {
+      setLoading(false);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit booking. Please try again later.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (submitted) {
@@ -143,11 +221,11 @@ const BookingPage = () => {
                   </div>
                   <div>
                     <p className="text-gray-500">Duration</p>
-                    <p className="font-medium">{formData.duration} {formData.duration > 1 ? 'hours' : 'hour'}</p>
+                    <p className="font-medium">{getSelectedSlotHours()} {getSelectedSlotHours() > 1 ? 'hours' : 'hour'}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Total Cost</p>
-                    <p className="font-medium">${calculateTotalCost().toFixed(2)}</p>
+                    <p className="font-medium">₹{calculateTotalCost().toFixed(2)}</p>
                   </div>
                 </div>
               </div>
@@ -299,23 +377,52 @@ const BookingPage = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="duration">Duration (hours)</Label>
+                  <Label htmlFor="selectedSlot">
+                    {selectedVehicle?.slots && selectedVehicle.slots.length > 0 
+                      ? "Select Slot or Hourly Duration" 
+                      : "Duration (hours)"}
+                  </Label>
                   <Select
-                    value={formData.duration.toString()}
-                    onValueChange={(value) => handleSelectChange("duration", value)}
+                    value={formData.selectedSlot}
+                    onValueChange={(value) => handleSelectChange("selectedSlot", value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select duration" />
+                      <SelectValue placeholder={selectedVehicle?.slots && selectedVehicle.slots.length > 0 
+                        ? "Select a slot" 
+                        : "Select duration"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 hour</SelectItem>
-                      <SelectItem value="2">2 hours</SelectItem>
-                      <SelectItem value="3">3 hours</SelectItem>
-                      <SelectItem value="4">4 hours</SelectItem>
-                      <SelectItem value="5">5 hours</SelectItem>
-                      <SelectItem value="6">6 hours</SelectItem>
-                      <SelectItem value="12">12 hours</SelectItem>
-                      <SelectItem value="24">24 hours</SelectItem>
+                      {selectedVehicle?.slots && selectedVehicle.slots.length > 0 ? (
+                        <>
+                          {/* Show slot-based pricing for bikes */}
+                          {selectedVehicle.slots.map((slot, index) => (
+                            <SelectItem key={`slot-${index}`} value={`${slot.hours}:${slot.price}`}>
+                              {slot.hours} {slot.hours > 1 ? 'hours' : 'hour'} - ₹{slot.price} (Slot)
+                            </SelectItem>
+                          ))}
+                          {/* Also show hourly options */}
+                          <SelectItem value="1">1 hour - ₹{selectedVehicle.hourlyRate.toFixed(2)}</SelectItem>
+                          <SelectItem value="2">2 hours - ₹{(selectedVehicle.hourlyRate * 2).toFixed(2)}</SelectItem>
+                          <SelectItem value="3">3 hours - ₹{(selectedVehicle.hourlyRate * 3).toFixed(2)}</SelectItem>
+                          <SelectItem value="4">4 hours - ₹{(selectedVehicle.hourlyRate * 4).toFixed(2)}</SelectItem>
+                          <SelectItem value="5">5 hours - ₹{(selectedVehicle.hourlyRate * 5).toFixed(2)}</SelectItem>
+                          <SelectItem value="6">6 hours - ₹{(selectedVehicle.hourlyRate * 6).toFixed(2)}</SelectItem>
+                          <SelectItem value="12">12 hours - ₹{(selectedVehicle.hourlyRate * 12).toFixed(2)}</SelectItem>
+                          <SelectItem value="24">24 hours - ₹{(selectedVehicle.hourlyRate * 24).toFixed(2)}</SelectItem>
+                        </>
+                      ) : (
+                        // Show duration options for cars or vehicles without slots
+                        <>
+                          <SelectItem value="1">1 hour</SelectItem>
+                          <SelectItem value="2">2 hours</SelectItem>
+                          <SelectItem value="3">3 hours</SelectItem>
+                          <SelectItem value="4">4 hours</SelectItem>
+                          <SelectItem value="5">5 hours</SelectItem>
+                          <SelectItem value="6">6 hours</SelectItem>
+                          <SelectItem value="12">12 hours</SelectItem>
+                          <SelectItem value="24">24 hours</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -325,13 +432,12 @@ const BookingPage = () => {
                 {loading ? "Processing..." : "Complete Booking"}
               </Button>
               <Button
-  asChild
-  variant="outline"
-  className="w-full mt-4"
->
-  <a href="tel:+918144229188">📞 Call for Booking</a>
-</Button>
-
+                asChild
+                variant="outline"
+                className="w-full mt-4"
+              >
+                <a href="tel:+918144229188">📞 Call for Booking</a>
+              </Button>
             </form>
           </div>
         </div>
@@ -352,14 +458,58 @@ const BookingPage = () => {
                 <p className="text-gray-600 mb-4 text-sm">{selectedVehicle.type === 'car' ? 'Car' : 'Bike'}</p>
                 
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Hourly Rate:</span>
-                    <span>₹{selectedVehicle.hourlyRate.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Duration:</span>
-                    <span>{formData.duration} {formData.duration > 1 ? 'hours' : 'hour'}</span>
-                  </div>
+                  {selectedVehicle.slots && selectedVehicle.slots.length > 0 ? (
+                    <>
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-2">Available Slots:</p>
+                        <div className="space-y-1">
+                          {selectedVehicle.slots.map((slot, index) => (
+                            <div 
+                              key={index}
+                              className={cn(
+                                "flex justify-between p-2 rounded text-sm",
+                                formData.selectedSlot === `${slot.hours}:${slot.price}` 
+                                  ? "bg-blue-50 border border-blue-200" 
+                                  : "bg-gray-50"
+                              )}
+                            >
+                              <span>{slot.hours} {slot.hours > 1 ? 'hours' : 'hour'}</span>
+                              <span className="font-medium">₹{slot.price}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex justify-between mb-2 pb-2 border-b border-gray-200">
+                        <span className="text-sm text-gray-600">Hourly Rate:</span>
+                        <span className="text-sm font-medium">₹{selectedVehicle.hourlyRate.toFixed(2)}/hr</span>
+                      </div>
+                      {formData.selectedSlot && (
+                        <div className="flex justify-between mb-2 pt-2 border-t">
+                          <span className="text-gray-600">Selected Slot:</span>
+                          <span>{getSelectedSlotHours()} {getSelectedSlotHours() > 1 ? 'hours' : 'hour'}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-gray-600">Hourly Rate:</span>
+                        <span>₹{selectedVehicle.hourlyRate.toFixed(2)}/hr</span>
+                      </div>
+                      {selectedVehicle.dailyRate && (
+                        <div className="flex justify-between mb-2 text-sm text-gray-500">
+                          <span>Daily Rate:</span>
+                          <span>₹{selectedVehicle.dailyRate.toFixed(2)}/day</span>
+                        </div>
+                      )}
+                      {formData.selectedSlot && (
+                        <div className="flex justify-between mb-2">
+                          <span className="text-gray-600">Duration:</span>
+                          <span>{getSelectedSlotHours()} {getSelectedSlotHours() > 1 ? 'hours' : 'hour'}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="flex justify-between font-semibold text-lg border-t border-gray-200 pt-2 mt-2">
                     <span>Total:</span>
                     <span>₹{calculateTotalCost().toFixed(2)}</span>

@@ -1,13 +1,20 @@
 
+export interface Slot {
+  hours: number;
+  price: number;
+}
+
 export interface Vehicle {
   id: string;
   name: string;
   type: 'car' | 'bike';
   image: string;
   hourlyRate: number;
+  dailyRate?: number; // Optional daily rate for cars
   available: boolean;
   featured?: boolean;
   description: string;
+  slots?: Slot[]; // Slot-based pricing for bikes
   specifications: {
     [key: string]: string | number;
   };
@@ -23,6 +30,11 @@ export const vehicles: Vehicle[] = [
     hourlyRate: 50,
     available: true,
     description: "Reliable and efficient scooter for city commuting.",
+    slots: [
+      { hours: 2, price: 150 },
+      { hours: 6, price: 300 },
+      { hours: 12, price: 450 }
+    ],
     specifications: {
       engine: "125cc",
       transmission: "Automatic",
@@ -39,6 +51,10 @@ export const vehicles: Vehicle[] = [
     available: true,
     description: "Cruiser bike with classic looks and a powerful 350cc engine.",
     featured: true,
+    slots: [
+      { hours: 12, price: 800 },
+      { hours: 24, price: 1200 }
+    ],
     specifications: {
       engine: "349cc",
       transmission: "Manual",
@@ -55,6 +71,10 @@ export const vehicles: Vehicle[] = [
     available: true,
     description: "Powerful street and touring bike with a 373cc engine.",
     featured: true,
+    slots: [
+      { hours: 12, price: 1000 },
+      { hours: 24, price: 1500 }
+    ],
     specifications: {
       engine: "373cc",
       transmission: "Manual",
@@ -85,6 +105,11 @@ export const vehicles: Vehicle[] = [
     hourlyRate: 50,
     available: true,
     description: "Sporty and lightweight scooter with smooth automatic ride.",
+    slots: [
+      { hours: 2, price: 150 },
+      { hours: 6, price: 300 },
+      { hours: 12, price: 450 }
+    ],
     specifications: {
       engine: "110cc",
       transmission: "Automatic",
