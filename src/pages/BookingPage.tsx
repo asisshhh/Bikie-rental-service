@@ -199,9 +199,9 @@ Booking Details:
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
               </svg>
             </div>
-            <h1 className="text-3xl font-bold mb-4">Booking Confirmed!</h1>
+            <h1 className="text-3xl font-bold mb-4">Your booking initiated!</h1>
             <p className="text-gray-600 mb-8">
-              Thank you for booking with Bikie. Your reservation details have been sent to your email.
+              Our team will get back to you with confirmation.
             </p>
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Booking Details</h2>
@@ -534,5 +534,6 @@ Booking Details:
     </div>
   );
 };
+
 
 export default BookingPage;
