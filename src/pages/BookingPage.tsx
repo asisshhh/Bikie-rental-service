@@ -82,23 +82,27 @@ const BookingPage = () => {
   const calculateTotalCost = (): number => {
     if (!selectedVehicle || !formData.selectedSlot) return 0;
     
-    // For bikes with slot-based pricing
-    if (selectedVehicle.slots && selectedVehicle.slots.length > 0) {
+    // Check if it's a slot-based selection (format: "hours:price")
+    if (formData.selectedSlot.includes(":")) {
       const [hours, price] = formData.selectedSlot.split(":");
       return parseFloat(price) || 0;
     }
     
-    // For cars or vehicles without slots, use hourly rate
+    // For hourly bookings (just a number)
     const duration = parseInt(formData.selectedSlot) || 1;
     return selectedVehicle.hourlyRate * duration;
   };
 
   const getSelectedSlotHours = (): number => {
     if (!formData.selectedSlot) return 0;
-    if (selectedVehicle?.slots && selectedVehicle.slots.length > 0) {
+    
+    // Check if it's a slot-based selection (format: "hours:price")
+    if (formData.selectedSlot.includes(":")) {
       const [hours] = formData.selectedSlot.split(":");
       return parseInt(hours) || 0;
     }
+    
+    // For hourly bookings (just a number)
     return parseInt(formData.selectedSlot) || 0;
   };
 
